@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Pocket Sun — a tiny planet adventure by Cybertux</title>
+  <meta name="author" content="Nashwan (Cybertux)" />
+  <meta name="description" content="Pocket Sun is a handcrafted 3D micro-adventure. Carry the last sun, wake a sleeping planet, and push back the dark. Made by Cybertux." />
+  <meta name="theme-color" content="#05070f" />
+  <meta property="og:title" content="Pocket Sun — a tiny planet adventure" />
+  <meta property="og:description" content="Carry the last sun. Wake a sleeping world. A handcrafted 3D micro-adventure by Cybertux." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Pocket Sun" />
+  <meta property="og:url" content="https://53536sg-alt.github.io/pocket-sun/" />
+  <meta property="og:image" content="https://53536sg-alt.github.io/pocket-sun/assets/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Pocket Sun — a small planet, a lighthouse of light, and the Sunkeeper" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pocket Sun — a tiny planet adventure" />
+  <meta name="twitter:description" content="Carry the last sun. Wake a sleeping world. A handcrafted 3D micro-adventure by Cybertux." />
+  <meta name="twitter:image" content="https://53536sg-alt.github.io/pocket-sun/assets/og.jpg" />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    // Apply a saved language before the first paint, so Arabic never flashes LTR.
+    try {
+      if (localStorage.getItem('ps_lang') === 'ar') {
+        document.documentElement.lang = 'ar';
+        document.documentElement.dir = 'rtl';
+      }
+    } catch (e) { /* storage unavailable */ }
+  </script>
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 64 64">
+      <ellipse cx="32" cy="34" rx="27" ry="10" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".3" transform="rotate(-18 32 34)"/>
+      <circle cx="32" cy="34" r="14" fill="#0b1026" stroke="currentColor" stroke-width="2"/>
+      <path d="M32 20 L43 41 H21 Z" fill="currentColor" opacity=".18"/>
+      <path d="M32 20 L43 41 L32 33 Z" fill="currentColor" opacity=".34"/>
+      <circle cx="51.5" cy="15.5" r="5" fill="#FFC247"/>
+      <g stroke="#FFC247" stroke-width="1.5" stroke-linecap="round">
+        <path d="M51.5 5.5v3"/><path d="M51.5 22.5v3"/><path d="M41.5 15.5h3"/><path d="M58.5 15.5h3"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <canvas id="game" aria-label="Pocket Sun — 3D game"></canvas>
+  <div class="frame" aria-hidden="true"></div>
+  <div id="flash" class="flash" aria-hidden="true"></div>
+  <div id="fade" class="fade" aria-hidden="true"></div>
+
+  <!-- ── BOOT ───────────────────────────────────────────── -->
+  <section id="boot" class="screen boot is-open" aria-label="Loading">
+    <div class="boot-inner">
+      <svg class="boot-mark" aria-hidden="true"><use href="#mark"/></svg>
+      <div class="boot-brand">CYBERTUX</div>
+      <div class="boot-sub" data-i18n="loading">Warming up the sun</div>
+      <div class="bar"><i id="boot-bar"></i></div>
+      <div class="boot-foot">POCKET SUN <span>·</span> v1.0</div>
+    </div>
+  </section>
+
+  <!-- ── TITLE ──────────────────────────────────────────── -->
+  <section id="title" class="screen title" aria-label="Main menu">
+    <div class="title-scrim" aria-hidden="true"></div>
+    <button class="title-lang mono" data-action="lang" aria-label="Switch language">ع</button>
+    <div class="title-inner">
+      <div class="kicker"><span class="dot"></span><span data-i18n="brand.kicker">A tiny planet adventure</span></div>
+      <h1 class="wordmark" dir="ltr"><span class="w1">POCKET</span><span class="w2">SUN<span class="star">✦</span></span></h1>
+      <p class="tagline" data-i18n="brand.tagline">Carry the last sun. Wake a sleeping world.</p>
+      <div class="menu">
+        <button class="btn btn-primary" data-action="start">
+          <span data-i18n="start">Begin the vigil</span><span class="btn-key">↵</span>
+        </button>
+        <button class="btn" data-action="help"><span data-i18n="help">How to play</span></button>
+        <button class="btn btn-ghost" data-action="credits"><span data-i18n="credits">Credits</span></button>
+      </div>
+      <div class="title-meta">
+        <span data-i18n="hint">WASD move · Space jump · Shift sprint · Drag to look</span>
+      </div>
+    </div>
+    <div class="title-aside" aria-hidden="true">
+      <span class="vertical">CYBERTUX · 2026</span>
+    </div>
+  </section>
+
+  <!-- ── HUD ────────────────────────────────────────────── -->
+  <div id="hud" class="hud" aria-hidden="true">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="pill" id="hearts" title="Sparks" aria-label="Sparks"></div>
+        <div class="pill" title="Stardust">
+          <span class="ico ico-dust">✦</span>
+          <span id="dust-count" class="mono">0</span>
+          <span class="sep">/</span>
+          <span class="mono dim" id="dust-need">3</span>
+        </div>
+        <div class="pill" title="Beacons">
+          <span class="ico">◎</span>
+          <span id="beacon-count" class="mono">0/4</span>
+          <span id="beacon-pips" class="pips"></span>
+        </div>
+      </div>
+      <div class="hud-right">
+        <button class="icon-btn mono" data-action="lang" id="lang-btn" aria-label="Switch language">ع</button>
+        <button class="icon-btn" data-action="mute" id="mute-btn" aria-label="Toggle sound">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path id="mute-wave" d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" data-action="pause" aria-label="Pause">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5" width="3.5" height="14" fill="currentColor"/><rect x="13.5" y="5" width="3.5" height="14" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="hud-bottom">
+      <div id="prompt" class="prompt" aria-live="polite"></div>
+      <div id="hint" class="hint" data-i18n="hint">WASD move · Space jump · Shift sprint · Drag to look</div>
+    </div>
+
+    <div class="mobile-controls" id="mobile" aria-hidden="true">
+      <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+      <div class="m-buttons">
+        <button class="m-btn" id="btn-jump" data-i18n="btn.jump">JUMP</button>
+        <button class="m-btn m-amber" id="btn-light" data-i18n="btn.light">LIGHT</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <div id="level-card" class="level-card" aria-hidden="true">
+    <div class="lc-row">
+      <span class="lc-num" id="lc-num">01</span>
+      <span class="lc-tag mono" data-i18n="level.tag">PLANET</span>
+    </div>
+    <div class="lc-line"></div>
+    <div class="lc-name" id="lc-name">The Long Night</div>
+    <div class="lc-sub" id="lc-sub">A sleeping world needs its keeper.</div>
+  </div>
+
+  <!-- ── PAUSE ──────────────────────────────────────────── -->
+  <div id="pause" class="overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-label mono" data-i18n="pause.label">VIGIL PAUSED</span><button class="x-btn" data-action="resume" aria-label="Close">×</button></div>
+      <h2 id="pause-title" class="panel-title" data-i18n="pause.title">Paused</h2>
+      <div class="panel-body stack">
+        <button class="btn btn-primary" data-action="resume"><span data-i18n="pause.resume">Resume</span><span class="btn-key">Esc</span></button>
+        <button class="btn" data-action="restart"><span data-i18n="pause.restart">Restart run</span></button>
+        <button class="btn btn-ghost" data-action="quit"><span data-i18n="pause.quit">Leave to title</span></button>
+      </div>
+      <div class="panel-foot mono">POCKET SUN · CYBERTUX</div>
+    </div>
+  </div>
+
+  <!-- ── HELP ───────────────────────────────────────────── -->
+  <div id="help" class="overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-label mono" data-i18n="help.label">FIELD NOTES</span><button class="x-btn" data-action="close-help" aria-label="Close">×</button></div>
+      <h2 id="help-title" class="panel-title" data-i18n="help.title">How to play</h2>
+      <div class="panel-body">
+        <p data-i18n="help.p1">You are the Sunkeeper. Your little sun keeps the dark at bay, but it cannot wake a world on its own.</p>
+        <ul class="rules">
+          <li><span class="rule-ico dust">✦</span><span data-i18n="help.r1">Gather stardust drifting above the surface.</span></li>
+          <li><span class="rule-ico beacon">◎</span><span data-i18n="help.r2">Stand by a sleeping beacon and press E to spend 3 stardust. It blooms into light.</span></li>
+          <li><span class="rule-ico gloom">◈</span><span data-i18n="help.r3">Gloom creatures hate the light. Keep moving, and sprint when they get close.</span></li>
+          <li><span class="rule-ico gate">◇</span><span data-i18n="help.r4">Light every beacon to open the gate. Follow the beam to the next planet.</span></li>
+        </ul>
+        <div class="keys">
+          <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span data-i18n="help.kMove">move</span></div>
+          <div><kbd>Space</kbd><span data-i18n="help.kJump">jump</span></div>
+          <div><kbd>Shift</kbd><span data-i18n="help.kSprint">sprint</span></div>
+          <div><kbd>E</kbd><span data-i18n="help.kLight">wake beacon</span></div>
+          <div><kbd>Drag</kbd><span data-i18n="help.kLook">look around</span></div>
+          <div><kbd>Esc</kbd><span data-i18n="help.kPause">pause</span></div>
+        </div>
+      </div>
+      <div class="panel-foot mono" data-i18n="help.foot">THERE IS NO RUSH. ONLY THE DARK.</div>
+    </div>
+  </div>
+
+  <!-- ── CREDITS ────────────────────────────────────────── -->
+  <div id="credits" class="overlay" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+    <div class="panel">
+      <div class="panel-top"><span class="panel-label mono" data-i18n="credits.label">COLOPHON</span><button class="x-btn" data-action="close-credits" aria-label="Close">×</button></div>
+      <h2 id="credits-title" class="panel-title" data-i18n="credits.title">Credits</h2>
+      <div class="panel-body" id="credits-body"></div>
+      <div class="panel-foot mono">© 2026 CYBERTUX · MIT</div>
+    </div>
+  </div>
+
+  <!-- ── WIN ────────────────────────────────────────────── -->
+  <div id="win" class="overlay win-overlay" role="dialog" aria-modal="true" aria-labelledby="win-title">
+    <div class="panel panel-win">
+      <div class="panel-top"><span class="panel-label mono" data-i18n="win.label">VIGIL COMPLETE</span><button class="x-btn" data-action="quit" aria-label="Close">×</button></div>
+      <h2 id="win-title" class="panel-title" data-i18n="win.title">The world is awake.</h2>
+      <p class="win-lede" data-i18n="win.lede">Every beacon is burning. For the first time in a long time, the dark has nothing to hold.</p>
+      <div class="stats">
+        <div class="stat"><span class="stat-k mono" data-i18n="win.time">VIGIL TIME</span><span class="stat-v" id="stat-time">00:00</span></div>
+        <div class="stat"><span class="stat-k mono" data-i18n="win.dust">STARDUST</span><span class="stat-v" id="stat-dust">0</span></div>
+        <div class="stat"><span class="stat-k mono" data-i18n="win.beacons">BEACONS</span><span class="stat-v" id="stat-beacons">0</span></div>
+      </div>
+      <div class="panel-body stack">
+        <button class="btn btn-primary" data-action="restart"><span data-i18n="win.again">Walk it again</span><span class="btn-key">↺</span></button>
+        <button class="btn btn-ghost" data-action="credits"><span data-i18n="credits">Credits</span></button>
+      </div>
+    </div>
+  </div>
+
+  <footer id="credit" class="credit">
+    <span data-i18n="footer.made">Made by</span>
+    <a href="https://53536sg-alt.github.io/CyberTux-info/" target="_blank" rel="noopener noreferrer">Cybertux <span class="slash">/</span> Nashwan</a>
+    <span class="credit-dot">·</span>
+    <a class="credit-license" href="https://github.com/53536sg-alt" target="_blank" rel="noopener noreferrer">MIT</a>
+  </footer>
+
+  <noscript><div class="noscript">Pocket Sun needs JavaScript and WebGL to run.</div></noscript>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
